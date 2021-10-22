@@ -1,5 +1,17 @@
 import * as React from 'react'
 
+const useSemiPersistentState = (key, initialState) => {
+  const [value, setValue] = React.useState(
+    localStorage.getItem(key) ?? initialState
+  );  
+  
+  React.useEffect(() => {
+    localStorage.setItem(key, value);
+  }, [value, key]);
+
+  return [value, setValue];
+}
+
 const App = () => {
   console.log("App renders");
   const stories = [
@@ -21,7 +33,7 @@ const App = () => {
     },
   ];
 
-const [searchTerm, setSearchTerm] = React.useState('React');  
+const [searchTerm, setSearchTerm] = useSemiPersistentState('search', 'React')
 
 const handleSearch = (event) => {
   setSearchTerm(event.target.value);
