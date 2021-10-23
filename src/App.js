@@ -42,7 +42,7 @@ const handleSearch = (event) => {
 const searchedStories = stories.filter((story) => story.title.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return(
-    <div>
+    <>
       <h1>My Hacker Stories</h1>
 
       <Search search={searchTerm} onSearch={handleSearch}/>
@@ -51,7 +51,7 @@ const searchedStories = stories.filter((story) => story.title.toLowerCase().incl
 
       <List list={searchedStories}/>
       
-    </div>
+    </>
     );
 }
 
@@ -78,10 +78,10 @@ const Search = ({search, onSearch}) => {
   console.log("Search renders");
 
   return(
-    <div>
+    <>
       <label htmlFor="search">Search: </label>
       <input id="search" type="text" value={search} onChange={onSearch}/>
-    </div>
+    </>
     
 );
 
