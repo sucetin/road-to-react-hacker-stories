@@ -1,5 +1,6 @@
 import * as React from "react";
 import axios from "axios";
+import styles from "./App.module.css";
 
 const useSemiPersistentState = (key, initialState) => {
 	const [value, setValue] = React.useState(
@@ -60,20 +61,20 @@ const App = () => {
 		isError: false,
 	});
 
-	const handleFetchStories = React.useCallback(() => {
+	const handleFetchStories = React.useCallback(async () => {
 		if (!searchTerm) return;
 		dispatchStories({ type: "STORIES_FETCH_INIT" });
+		try {
+			const result = await axios.get(url);
 
-		axios
-			.get(url)
-			.then((result) => {
-				dispatchStories({
-					type: "STORIES_FETCH_SUCCESS",
-					payload: result.data.hits,
-				});
-			})
-			.catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
-	}, [url]);
+			dispatchStories({
+				type: "STORIES_FETCH_SUCCESS",
+				payload: result.data.hits,
+			});
+		} catch {
+			dispatchStories({ type: "STORIES_FETCH_FAILURE" });
+		}
+	}, [url, searchTerm]);
 
 	React.useEffect(() => {
 		handleFetchStories();
@@ -90,36 +91,50 @@ const App = () => {
 		setSearchTerm(event.target.value);
 	};
 
-	const handleSearchSubmit = () => {
+	const handleSearchSubmit = (e) => {
 		setUrl(`${API_ENDPOINT}${searchTerm}`);
+		e.preventDefault();
 	};
 
 	return (
-		<>
-			<h1>My Hacker Stories</h1>
-			<InputWithLabel
-				id="search"
-				value={searchTerm}
-				isFocused
-				onInputChange={handleSearchInput}
-			>
-				<strong>Search: </strong>
-			</InputWithLabel>
+		<div className={styles.container}>
+			<h1 className={styles.headlinePrimary}>My Hacker Stories</h1>
+			<SearchForm
+				searchTerm={searchTerm}
+				onSearchInput={handleSearchInput}
+				onSearchSubmit={handleSearchSubmit}
+			/>
 
-			<button type="button" disabled={!searchTerm} onClick={handleSearchSubmit}>
-				Submit
-			</button>
-
-			<hr />
 			{stories.isError && <p>Something went wrong..</p>}
 			{stories.isLoading ? (
 				<p>Loading...</p>
 			) : (
 				<List list={stories.data} onRemoveItem={handleRemoveStory} />
 			)}
-		</>
+		</div>
 	);
 };
+
+const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }) => (
+	<form onSubmit={onSearchSubmit} className={styles.searchForm}>
+		<InputWithLabel
+			id="search"
+			value={searchTerm}
+			isFocused
+			onInputChange={onSearchInput}
+		>
+			<strong>Search: </strong>
+		</InputWithLabel>
+
+		<button
+			className={`${styles.button} ${styles.buttonLarge}`}
+			type="submit"
+			disabled={!searchTerm}
+		>
+			Submit
+		</button>
+	</form>
+);
 
 const List = ({ list, onRemoveItem }) => (
 	<ul>
@@ -131,15 +146,19 @@ const List = ({ list, onRemoveItem }) => (
 
 const Item = ({ item, onRemoveItem }) => {
 	return (
-		<li>
-			<span>
+		<li className={styles.item}>
+			<span style={{ width: "40%" }}>
 				<a href={item.url}>{item.title}</a>
 			</span>
-			<span>{item.author}</span>
-			<span>{item.num_comments}</span>
-			<span>{item.points}</span>
-			<span>
-				<button type="button" onClick={() => onRemoveItem(item)}>
+			<span style={{ width: "30%" }}>{item.author}</span>
+			<span style={{ width: "10%" }}>{item.num_comments}</span>
+			<span style={{ width: "10%" }}>{item.points}</span>
+			<span style={{ width: "10%" }}>
+				<button
+					className={`${styles.button} ${styles.buttonSmall}`}
+					type="button"
+					onClick={() => onRemoveItem(item)}
+				>
 					Dismiss
 				</button>
 			</span>
@@ -167,7 +186,9 @@ const InputWithLabel = ({
 
 	return (
 		<>
-			<label htmlFor={id}>{children}</label>
+			<label className={styles.label} htmlFor={id}>
+				{children}
+			</label>
 			&nbsp;
 			<input
 				ref={inputRef}
@@ -176,6 +197,7 @@ const InputWithLabel = ({
 				value={value}
 				onChange={onInputChange}
 				autoFocus={isFocused}
+				className={styles.input}
 			/>
 		</>
 	);
